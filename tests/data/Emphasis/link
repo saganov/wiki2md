@@ -1,0 +1,5 @@
+_foo_ [UoA](http://en.wikipedia.org/wiki/University_of_Auckland)
+_bar_ [UoA](http://en.wikipedia.org/wiki/University__of__Auckland)
+_baz_ [__baz__](http://en.wikipedia.org/wiki/University__of__Auckland)
+
+_qux_ quux __quuux__ _quuuux_ [__baz__](http://en.wikipedia.org/wiki/University__of__Auckland)

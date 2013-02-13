@@ -1,0 +1,9 @@
+    set_include_path(get_include_path() . PATH_SEPARATOR . realpath('src'));
+
+    require_once 'SplClassLoader.php';
+    $l = new SplClassLoader('MaxTsepkov');
+    $l->register();
+
+    use MaxTsepkov\Markdown\Text;
+
+    echo new Text($markdown);
