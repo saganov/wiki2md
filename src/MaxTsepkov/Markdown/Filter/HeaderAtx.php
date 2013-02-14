@@ -56,10 +56,10 @@ class HeaderAtx extends Filter
         foreach($text as $no => $line) {
             if ($line->flags & Line::NOMARKDOWN) continue;
 
-            if (preg_match('/^#+\s*\w/uS', $line)) {
-                $html = rtrim($line, '#');
-                $level = substr_count($html, '#', 0, min(6, strlen($html)));
-                $html = str_repeat('=', $level) .' '. trim(substr($html, $level)) .' '. str_repeat('=', $level);
+            if (preg_match('/^=+\s*\w/uS', $line)) {
+                $html = rtrim($line, '=');
+                $level = substr_count($html, '=', 0, min(6, strlen($html)));
+                $html = str_repeat('#', $level) .' '. trim(substr($html, $level)) .' '. str_repeat('#', $level);
                 $line->gist = $html;
             }
         }

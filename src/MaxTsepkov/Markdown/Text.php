@@ -43,23 +43,21 @@ class Text extends \ArrayObject
     protected static $_defaultFilters = null;
 
     protected static $_factoryDefaultFilters = array(
-        'Placeholders',
-        'HeaderAtx',
-        'HeaderSetext',
+        'Hr',
+        //'ListsBulleted',
         'ListsNumbered',
-        'ListsBulleted',
         'Blockquote',
         'Code',
         //'Entities',
-        'Hr',
+        'HeaderAtx',
+        'HeaderSetext',
         'Img',
         'Linebreak',
         'Link',
         'Emphasis',
         'Paragraph',
         'Unescape',
-        //'Issues',
-        'Command',
+        'Mantis'
     );
 
     /**
@@ -69,10 +67,6 @@ class Text extends \ArrayObject
      * @var array
      */
     protected $_filters = array();
-
-    protected static $_placeholders = array();
-
-    protected static $_workingDirectory = '';
 
     /**
      * Constructor.
@@ -118,11 +112,6 @@ class Text extends \ArrayObject
         return $this->getHtml();
     }
 
-    public function __toArray()
-    {
-        return $this->getArray();
-    }
-
     public function getHtml()
     {
         if (!$this->_isFiltered) {
@@ -142,27 +131,6 @@ class Text extends \ArrayObject
         }
 
         return implode("\n", (array) $this);
-    }
-
-    public function getArray()
-    {
-        if (!$this->_isFiltered) {
-            foreach ($this->_filters as $filter) {
-                $filter->preFilter($this);
-            }
-
-            foreach ($this->_filters as $filter) {
-                $filter->filter($this);
-            }
-
-            foreach ($this->_filters as $filter) {
-                $filter->postFilter($this);
-            }
-
-            $this->_isFiltered = true;
-        }
-
-        return (array) $this;
     }
 
     public function getFilters()
@@ -266,30 +234,5 @@ class Text extends \ArrayObject
     public static function setDefaultFilters(array $filters)
     {
         self::$_defaultFilters = $filters;
-    }
-
-    public static function setPlaceholders(array $placeholders = array())
-    {
-        self::$_placeholders = $placeholders;
-    }
-
-    public static function getPlaceholders()
-    {
-        return self::$_placeholders;
-    }
-
-    public static function getPlaceholder($name)
-    {
-        return (isset(self::$_placeholders[$name]) ? self::$_placeholders[$name] : NULL);
-    }
-
-    public static function setWorkingDirectory($path)
-    {
-        self::$_workingDirectory = $path;
-    }
-
-    public static function getWorkingDirectory()
-    {
-        return self::$_workingDirectory;
     }
 }

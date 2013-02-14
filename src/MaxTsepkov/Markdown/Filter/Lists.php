@@ -47,13 +47,6 @@ use MaxTsepkov\Markdown\Lists\Stack,
 abstract class Lists extends Filter
 {
     /**
-     * array( intendation level => list level );
-     */
-    protected static $levels = array(0 => 1);
-    protected static $intend = 0;
-    protected static $level  = 1;
-
-    /**
      * Pass given text through the filter and return result.
      *
      * @see Filter::filter()
@@ -62,62 +55,79 @@ abstract class Lists extends Filter
      */
     public function filter(Text $text)
     {
-        foreach($text as $no => $line) {
-            //if ($line->flags & Line::NOMARKDOWN) continue;
-            if (false !== $matches = $this->matchMarker($line)) {
-                $line->flags = Line::LISTS;
-                $html = trim(ltrim((string)$line, $matches[2].' '));
-                $intend = strlen($matches[1]);
-                
-                if($intend > self::$intend)
-                {
-                    self::$levels[$intend] = ++self::$level;
+        $stack = new Stack();
+
+        foreach ($text as $no => $line) {
+            $prevline = isset($text[$no - 1]) ? $text[$no - 1] : null;
+            $nextline = isset($text[$no + 1]) ? $text[$no + 1] : null;
+
+            // match list marker, add a new list item
+            if (($marker = $this->matchMarker($line)) !== false) {
+                if (!$stack->isEmpty() && $prevline !== null && (!isset($nextline) || $nextline->isBlank())) {
+                    $stack->paragraphize();
                 }
-                elseif($intend < self::$intend)
-                {
-                    if(isset(self::$levels[$intend]))
-                    {
-                        self::$level = self::$levels[$intend];
+
+                $stack->addItem(array($no => substr($line, strlen($marker))));
+
+                continue;
+            }
+
+            // we are inside a list
+            if (!$stack->isEmpty()) {
+                // a blank line
+                if ($line->isBlank()) {
+                    // two blank lines in a row
+                    if ($prevline !== null && $prevline->isBlank()) {
+                        // end of list
+                        $stack->apply($text, static::TAG);
                     }
-                    else
-                    {
-                        // try to correct wrong intendation
-                        // try to gues how intendation should be instead
-                        ksort(self::$levels);
-                        for($i=1; $i<5; $i++)
-                        {
-                            if(isset(self::$levels[$intend-$i]))
-                            {
-                                self::$level = self::$levels[$intend-$i];
-                                break;
+                } else { // not blank line
+                    if ($line->isIndented()) {
+                        // blockquote
+                        if (substr(ltrim($line), 0, 1) == '>') {
+                            $line->gist = substr(ltrim($line), 1);
+                            if (substr(ltrim($prevline), 0, 1) != '>') {
+                                $line->prepend('<blockquote>');
                             }
-                            else if(isset(self::$levels[$intend+$i]))
-                            {
-                                self::$level = self::$levels[$intend+$i];
-                                break;
+                            if (substr(ltrim($nextline), 0, 1) != '>') {
+                                $line->append('</blockquote>');
                             }
+                        // codeblock
+                        } else if (substr($line, 0, 2) == "\t\t" || substr($line, 0, 8) == '        ') {
+                            $line->gist = ltrim(htmlspecialchars($line, ENT_NOQUOTES));
+                            if (!(substr($prevline, 0, 2) == "\t\t" || substr($prevline, 0, 8) == '        ')) {
+                                $line->prepend('<pre><code>');
+                            }
+                            if (!(substr($nextline, 0, 2) == "\t\t" || substr($nextline, 0, 8) == '        ')) {
+                                $line->append('</code></pre>');
+                            }
+                        } elseif (!isset($prevline) || $prevline->isBlank()) {
+                            // new paragraph inside a list item
+                            $line->gist = '</p><p>' . ltrim($line);
+                        } else {
+                            $line->gist = ltrim($line);
                         }
-                        // ERROR
+                    } elseif (!isset($prevline) || $prevline->isBlank()) {
+                        // end of list
+                        $stack->apply($text, static::TAG);
+                        continue;
+                    } else { // unbroken text inside a list item
+                        // add text to current list item
+                        $line->gist = ltrim($line);
                     }
+
+                    $stack->appendLine(array($no => $line));
                 }
-                else
-                {
-                    
-                }
-                
-                self::$intend = $intend;
-                $line->gist = str_repeat(static::MARKER, self::$level). " {$html}";
             }
         }
+
+        // if there is still stack, flush it
+        if (!$stack->isEmpty()) {
+            $stack->apply($text, static::TAG);
+        }
+
+        return $text;
     }
 
-    //abstract protected function matchMarker($line);
-    protected function matchMarker($line)
-    {
-        if (preg_match(static::REGEXP, $line, $matches)) {
-            return $matches;
-        } else {
-            return false;
-        }
-    }
+    abstract protected function matchMarker($line);
 }

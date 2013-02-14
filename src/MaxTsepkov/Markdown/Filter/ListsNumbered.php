@@ -41,8 +41,30 @@ use MaxTsepkov\Markdown\Filter,
  * @author Max Tsepkov <max@garygolden.me>
  * @version 1.0
  */
-class ListsNumbered extends Lists
+class ListsNumbered extends /*Lists*/Filter
 {
-    const REGEXP = '/^(\s*)(\d+\.)\s+\S/uS';
-    const MARKER = '#';
+    const TAG = 'ol';
+
+    protected function matchMarker($line){
+        if (preg_match('/^ {0,3}\d+\.\s+/uS', $line, $matches)) {
+            return $matches[0];
+        } else {
+            return false;
+        }
+    }
+
+    public function filter(Text $text)
+    {
+        foreach($text as $no => $line)
+        {
+            if ($line->flags & Line::NOMARKDOWN) continue;
+
+            $line->gist = preg_replace_callback(
+                '/^(#+)\s*(.*)$/', 
+                function($match){
+                    return str_repeat(' ', 2*(count($match[1])-1)) .'1. '. $match[2];
+                },
+                $line->gist);
+        }
+    }
 }

@@ -66,41 +66,52 @@ class Emphasis extends Filter
 
             // strong
             $matches = array();
-            $pattern = '/(?<![\\\\\w\d])(\*\*)(?=\S)(.+?[*]*)(?<=\S)(?<!\\\\)\1/u';
+            $pattern = '/(?<!\\\\)(\'\'\'\'\')(?=\S)(.+?[\']*)(?<=\S)(?<!\\\\)\1/u';
             preg_match_all($pattern, $noTags, $matches);
             foreach($matches[0] as $match) {
-                $replace = "'''" . substr($match, 2);
-                $replace = substr($replace, 0, -2) . "'''";
+                $replace = '**' . substr($match, 5);
+                $replace = substr($replace, 0, -5) . '**';
                 $line->gist = str_replace($match, $replace, $line->gist);
             }
 
-            $pattern = '/(?<![\\\\\w\d])(__)(?=\S)(.+?[_]*)(?<=\S)(?<!\\\\)\1/u';
+            $pattern = '/(?<!\\\\)(\'\'\')(?=\S)(.+?[\']*)(?<=\S)(?<!\\\\)\1/u';
             preg_match_all($pattern, $noTags, $matches);
             foreach($matches[0] as $match) {
-                $replace = "''" . substr($match, 2);
-                $replace = substr($replace, 0, -2) . "''";
-                $line->gist = str_replace($match, $replace, $line->gist);
-            }
-
-            // emphasis
-            $matches = array();
-            $pattern = '/(?<![\\\\\w\d})])(\*)(?!\s)(.+?)(?<![\\\\\s{(])\1/u';
-            preg_match_all($pattern, $noTags, $matches);
-            foreach($matches[0] as $match) {
-                $replace = "'''" . substr($match, 1);
-                $replace = substr($replace, 0, -1) . "'''";
+                $replace = '**' . substr($match, 3);
+                $replace = substr($replace, 0, -3) . '**';
                 $line->gist = str_replace($match, $replace, $line->gist);
             }
 
             // emphasis
             $matches = array();
-            $pattern = '/(?<![\\\\\w\d})])(_)(?!\s)(.+?)(?<![\\\\\s{(])\1/u';
+            $pattern = '/(?<!\\\\)(\'\')(?!\s)(.+?)(?<![\\\\\s])\1/u';
             preg_match_all($pattern, $noTags, $matches);
             foreach($matches[0] as $match) {
-                $replace = "''" . substr($match, 1);
-                $replace = substr($replace, 0, -1) . "''";
+                $replace = '*' . substr($match, 2);
+                $replace = substr($replace, 0, -2) . '*';
                 $line->gist = str_replace($match, $replace, $line->gist);
             }
+
+/*
+            // strong
+            $matches = array();
+            $pattern = '/(?<![\\\\])(\'{3})(?=\S)(.+?\'{3})(?<=\S)(?<!\\\\)\1/u';
+            preg_match_all($pattern, $noTags, $matches);
+            foreach($matches[0] as $match) {
+                $replace = "**" . substr($match, 2);
+                $replace = substr($replace, 0, -2) . "**";
+                $line->gist = str_replace($match, $replace, $line->gist);
+            }
+            // emphasis
+            $matches = array();
+            $pattern = '/(?<![\\\\])(\'{2})(?=\S)(.+?\'{2})(?<=\S)(?<!\\\\)\1/u';
+            preg_match_all($pattern, $noTags, $matches);
+            foreach($matches[0] as $match) {
+                $replace = "*" . substr($match, 2);
+                $replace = substr($replace, 0, -2) . "*";
+                $line->gist = str_replace($match, $replace, $line->gist);
+            }
+*/
         }
 
         return $text;

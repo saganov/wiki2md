@@ -54,18 +54,17 @@ class HeaderSetext extends Filter
     public function filter(Text $text)
     {
         foreach($text as $no => $line) {
-            //var_dump($no, $line);
             if ($no == 0) continue; // processing 1st line makes no sense
             if ($line->flags & Line::NOMARKDOWN) continue;
 
             $prevline = isset($text[$no - 1]) ? $text[$no - 1] : null;
 
             if (preg_match('/^=+$/uS', $line) && $prevline !== null && !$prevline->isBlank()) {
-                $prevline->prepend('= ')->append(' =');
+                $prevline->wrap('h1');
                 $line->gist = '';
             }
             else if (preg_match('/^-+$/uS', $line) && $prevline !== null && !$prevline->isBlank()) {
-                $prevline->prepend('== ')->append(' ==');            
+                $prevline->wrap('h2');
                 $line->gist = '';
             }
         }

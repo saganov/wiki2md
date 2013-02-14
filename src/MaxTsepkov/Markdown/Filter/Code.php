@@ -54,8 +54,6 @@ use MaxTsepkov\Markdown\Filter,
  */
 class Code extends Filter
 {
-    protected static $language;
-
     /**
      * Flags lines containing codeblocks.
      * Other filters must avoid parsing markdown on that lines.
@@ -84,20 +82,7 @@ class Code extends Filter
                     $line->flags |= Line::NOMARKDOWN + Line::CODEBLOCK;
                 }
             }
-            elseif(preg_match('/^~+\{?\.?(\w+)\}?/', $line, $matches))
-            {
-                $line->flags |= Line::NOMARKDOWN + Line::CODEBLOCK;
-                self::$language = $matches[1];
-            }
-            elseif(preg_match('/^~+\s*$/', $line))
-            {
-                $line->flags |= Line::NOMARKDOWN + Line::CODEBLOCK;
-                self::$language = !(bool)self::$language;
-            }
-            elseif(self::$language)
-            {
-                $line->flags |= Line::NOMARKDOWN + Line::CODEBLOCK;
-            }
+
         }
     }
 
@@ -118,40 +103,15 @@ class Code extends Filter
             $nextline = isset($text[$no + 1]) ? $text[$no + 1] : null;
 
             if ($line->flags & Line::CODEBLOCK) {
-                if(preg_match('/^~+\{?\.?(\w+)\}?/', $line, $matches))
-                {
-                    $line->gist = "<div style='border: 1px dashed #2F6FAB; background-color: #F9F9F9;'>"
-                        ."<source lang='{$matches[1]}'>";
-                    self::$language = $matches[1];
+                $line->outdent();
+                $line->gist = htmlspecialchars($line, ENT_NOQUOTES);
+                if (!$insideCodeBlock) {
+                    $line->prepend('<pre><code>');
                     $insideCodeBlock = true;
                 }
-                elseif(preg_match('/^~+\s*$/', $line))
-                {
-                    if($insideCodeBlock)
-                    {
-                        $line->gist = "</source></div>";
-                    }
-                    else
-                    {
-                        $line->gist = "";
-                    }
-
-                    self::$language = !(bool) self::$language;
-                    $insideCodeBlock = !(bool) $insideCodeBlock;
-                }
-                else
-                {
-                    $line->outdent();
-                    //$line->gist = htmlspecialchars($line, ENT_NOQUOTES);
-                    $line->gist = " ".$line;
-                    if (!$insideCodeBlock) {
-                        $line->prepend('');
-                        $insideCodeBlock = true;
-                    }
-                    if (!$nextline || !($nextline->flags & Line::CODEBLOCK)) {
-                        self::$language = false;
-                        $insideCodeBlock = false;
-                    }
+                if (!$nextline || !($nextline->flags & Line::CODEBLOCK)) {
+                    $line->append('</code></pre>');
+                    $insideCodeBlock = false;
                 }
             } else {
                 $line->gist = preg_replace_callback(

@@ -22,10 +22,10 @@ class Stack extends \SplStack
     {
         $listOpened = false;
         $itemOpened = false;
-        //echo "$tag\n";
+
         while (!$this->isEmpty()) {
             $item = $this->shift();
-            //var_dump($item);
+
             // process paragraphs
             if ($this->_paragraphs) {
                 $item[ key($item) ] = '<p>' . current($item);
@@ -42,7 +42,7 @@ class Stack extends \SplStack
 
             // process <ul>/<ol>
             if (!$listOpened) {
-                $item[ key($item) ] = "<$tag>\n" . current($item);
+                $item[ key($item) ] = "<$tag>" . current($item);
                 $listOpened = true;
             }
 
@@ -52,8 +52,7 @@ class Stack extends \SplStack
                 $text[$no] = $line;
             }
         }
-        //echo "========\n";
-        $text[$no]->gist = $text[$no] . "\n</$tag>";
+        $text[$no]->gist = $text[$no] . '</ul>';
 
         $this->reset();
 
